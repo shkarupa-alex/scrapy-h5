@@ -1,0 +1,63 @@
+[build-system]
+requires = [
+    "setuptools>=41",
+    "wheel",
+    "setuptools-git-versioning>=2.0,<3"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools-git-versioning]
+enabled = true
+
+[project]
+name = "parsel-h5"
+dynamic = ["version"]
+description = "Parsel with html5ever parser for HTML"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "markupever>=0.3.2",
+    "parsel>=1.10.0",
+    "ruff>=0.14.11",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+    "setuptools>=80.9.0",
+    "setuptools-git-versioning>=2.1.0",
+    "wheel>=0.45.1",
+]
+
+[tool.ruff]
+fix = true
+unsafe-fixes = true
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["EM", "TRY003", "D1", "FA"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+no-lines-before = ["standard-library"]
+known-third-party = []
+
+[tool.ruff.lint.extend-per-file-ignores]
+"*_test.py" = ["S101", "S311"]
+
+[tool.mypy]
+strict = true
+
+[tool.pytest.ini_options]
+addopts = ["--strict-config", "--strict-markers"]
+xfail_strict = true
+
+[tool.coverage.report]
+exclude_also = ["if typing.TYPE_CHECKING:"]
