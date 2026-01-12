@@ -1,14 +1,14 @@
 """HtmlFiveSelector and HtmlFiveSelectorList classes using markupever (html5ever) for HTML parsing."""
 
 from __future__ import annotations
+import json
 import logging
 import re
 from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
-from warnings import warn
 
 import jmespath
 import markupever
-from parsel.selector import _load_json_or_none
+from parsel.selector import CannotRemoveElementWithoutRoot, _load_json_or_none
 from parsel.utils import extract_regex, flatten, iflatten, shorten
 from scrapy.utils.trackref import object_ref
 
@@ -25,18 +25,6 @@ _SelectorType = TypeVar("_SelectorType", bound="HtmlFiveSelector")
 logger = logging.getLogger(__name__)
 
 
-class HtmlFiveSelectorError(Exception):  # TODO
-    """Base exception for HtmlFiveSelector errors."""
-
-
-class HtmlFiveParseError(HtmlFiveSelectorError):
-    """Raised when HTML parsing fails."""
-
-
-class HtmlFiveSelectError(HtmlFiveSelectorError):
-    """Raised when CSS selection fails."""
-
-
 class HtmlFiveSelectorList(list[_SelectorType], object_ref):
     """A list of HtmlFiveSelector objects with convenience methods for bulk operations."""
 
@@ -44,9 +32,9 @@ class HtmlFiveSelectorList(list[_SelectorType], object_ref):
     def __getitem__(self, pos: int) -> _SelectorType: ...
 
     @overload
-    def __getitem__(self, pos: slice) -> HtmlFiveSelectorList[_SelectorType]: ...
+    def __getitem__(self, pos: slice) -> Self: ...
 
-    def __getitem__(self, pos: int | slice) -> _SelectorType | HtmlFiveSelectorList[_SelectorType]:
+    def __getitem__(self, pos: int | slice) -> _SelectorType | Self:
         o = super().__getitem__(pos)
         if isinstance(pos, slice):
             return self.__class__(o)
@@ -55,28 +43,40 @@ class HtmlFiveSelectorList(list[_SelectorType], object_ref):
     def __getstate__(self) -> None:
         raise TypeError("can't pickle SelectorList objects")
 
-    def jmespath(self, query: str, **kwargs: Any) -> HtmlFiveSelectorList[_SelectorType]:
-        """Call the ``.jmespath()`` method for each element in this list and return
-        their results flattened as another :class:`SelectorList`.
+    def jmespath(
+        self,
+        query: str,
+        **kwargs: Any,  # noqa: ANN401
+    ) -> Self:
+        """Call the `.jmespath()` method for each element in this list.
 
-        ``query`` is the same argument as the one in :meth:`Selector.jmespath`.
+        Return their results flattened as another `HtmlFiveSelectorList`.
 
-        Any additional named arguments are passed to the underlying
-        ``jmespath.search`` call, e.g.::
+        `query` is the same argument as the one in `HtmlFiveSelector.jmespath`.
+
+        Any additional named arguments are passed to the underlying `jmespath.search` call, e.g.::
 
             selector.jmespath("author.name", options=jmespath.Options(dict_cls=collections.OrderedDict))
         """
         return self.__class__(flatten([x.jmespath(query, **kwargs) for x in self]))
 
-    def xpath(self, query: str, **kwargs: Any) -> HtmlFiveSelectorList[_SelectorType]:
+    def xpath(
+        self,
+        query: str,
+        **kwargs: Any,  # noqa: ANN401
+    ) -> Self:
         """Apply XPath query (converted to CSS) to all elements and return flattened results."""
         return self.__class__(flatten([x.xpath(query, **kwargs) for x in self]))
 
-    def css(self, query: str) -> HtmlFiveSelectorList[_SelectorType]:
+    def css(self, query: str) -> Self:
         """Apply CSS selector to all elements and return flattened results."""
         return self.__class__(flatten([x.css(query) for x in self]))
 
-    def re(self, regex: str | Pattern[str], replace_entities: bool = True) -> list[str]:
+    def re(
+        self,
+        regex: str | Pattern[str],
+        replace_entities: bool = True,  # noqa: FBT001, FBT002
+    ) -> list[str]:
         """Apply regex to all elements and return flattened string results."""
         return flatten([x.re(regex, replace_entities=replace_entities) for x in self])
 
@@ -85,7 +85,7 @@ class HtmlFiveSelectorList(list[_SelectorType], object_ref):
         self,
         regex: str | Pattern[str],
         default: None = None,
-        replace_entities: bool = True,
+        replace_entities: bool = True,  # noqa: FBT001, FBT002
     ) -> str | None: ...
 
     @overload
@@ -93,14 +93,14 @@ class HtmlFiveSelectorList(list[_SelectorType], object_ref):
         self,
         regex: str | Pattern[str],
         default: str,
-        replace_entities: bool = True,
+        replace_entities: bool = True,  # noqa: FBT001, FBT002
     ) -> str: ...
 
     def re_first(
         self,
         regex: str | Pattern[str],
         default: str | None = None,
-        replace_entities: bool = True,
+        replace_entities: bool = True,  # noqa: FBT001, FBT002
     ) -> str | None:
         """Apply regex and return first match, or default if no match."""
         for el in iflatten(x.re(regex, replace_entities=replace_entities) for x in self):
@@ -229,43 +229,69 @@ class HtmlFiveSelector(object_ref):
         return query, is_text, is_attr, attr_name
 
     def jmespath(
-        self: _SelectorType,
+        self,
         query: str,
-        **kwargs: Any,
-    ) -> HtmlFiveSelectorList[_SelectorType]:
-        """Find objects matching the JMESPath ``query`` and return the result as a
-        :class:`SelectorList` instance with all elements flattened. List
-        elements implement :class:`Selector` interface too.
+        **kwargs: Any,  # noqa: ANN401
+    ) -> HtmlFiveSelectorList[Self]:
+        """Find objects matching the JMESPath `query`.
 
-        ``query`` is a string containing the `JMESPath
-        <https://jmespath.org/>`_ query to apply.
+        Return the res  # noqa: ANN401
+        List elements implement `HtmlFiveSelector` interface too.
 
-        Any additional named arguments are passed to the underlying
-        ``jmespath.search`` call, e.g.::
+        `query` is a string containing the `JMESPath <https://jmespath.org/>` query to apply.
+
+        Any additional named arguments are passed to the underlying `jmespath.search` call, e.g.:
 
             selector.jmespath("author.name", options=jmespath.Options(dict_cls=collections.OrderedDict))
         """
-        data = _load_json_or_none(self.root.text)
+        data = self._get_jmespath_data()
+        result = self._run_jmespath_query(query, data, **kwargs)
+        return cast("HtmlFiveSelectorList[_SelectorType]", self.selectorlist_cls(result))
 
+    def _get_jmespath_data(self) -> Any:  # noqa: ANN401
+        """Get data for JMESPath query from the current root."""
+        if isinstance(self._root, str):
+            # Root is a string (text node or JSON string)
+            return _load_json_or_none(self._root)
+        if hasattr(self._root, "text"):
+            # Element with text() method
+            return _load_json_or_none(self._root.text())
+        # TreeDom - serialize and try to parse
+        if hasattr(self._root, "serialize"):
+            return _load_json_or_none(self._root.serialize())
+        return None
+
+    def _run_jmespath_query(
+        self,
+        query: str,
+        data: Any,  # noqa: ANN401
+        **kwargs: Any,  # noqa: ANN401
+    ) -> list[Self]:
+        """Run JMESPath query on data and return list of selectors."""
         result = jmespath.search(query, data, **kwargs)
         if result is None:
-            result = []
-        elif not isinstance(result, list):
+            return []
+        if not isinstance(result, list):
             result = [result]
+        return [self._make_jmespath_selector(x, query) for x in result]
 
-        def make_selector(x: Any) -> _SelectorType:  # closure function
-            if isinstance(x, str):
-                return self.__class__(text=x, _expr=query, type="text")
-            return self.__class__(root=x, _expr=query)
-
-        result = [make_selector(x) for x in result]
-        return cast("HtmlFiveSelectorList[_SelectorType]", self.selectorlist_cls(result))
+    def _make_jmespath_selector(
+        self,
+        value: Any,  # noqa: ANN401
+        query: str,
+    ) -> Self:
+        """Create a selector from a JMESPath result value."""
+        if isinstance(value, str):
+            # Return as text node selector
+            return self.__class__(root=value, _expr=query)
+        # Non-string values (dicts, lists, etc.) - convert to JSON string
+        return self.__class__(root=json.dumps(value), _expr=query)
 
     def xpath(
         self,
         query: str,
         namespaces: Mapping[str, str] | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ANN401
     ) -> HtmlFiveSelectorList[Self]:
         """Select elements using XPath (converted to CSS).
 
@@ -452,8 +478,13 @@ class HtmlFiveSelector(object_ref):
         """Remove namespaces (no-op for html5ever, kept for API compatibility)."""
 
     def drop(self) -> None:
-        # TODO
-        pass
+        """Drop/remove matched nodes from the parent.
+
+        Removes the current element from its parent in the DOM tree.
+        After calling drop(), the element is detached and the parent's
+        serialized content will no longer include this element.
+        """
+        self._root.detach()
 
     @property
     def attrib(self) -> dict[str, str]:

@@ -672,6 +672,7 @@ dependencies = [
     { name = "markupever" },
     { name = "parsel" },
     { name = "scrapy" },
+    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -688,6 +689,7 @@ requires-dist = [
     { name = "markupever", specifier = ">=0.3.2" },
     { name = "parsel", specifier = ">=1.10.0" },
     { name = "scrapy", specifier = ">=2.11.0" },
+    { name = "typing-extensions", specifier = ">=4.15.0" },
 ]
 
 [package.metadata.requires-dev]

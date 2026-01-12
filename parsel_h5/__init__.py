@@ -27,21 +27,15 @@ Usage:
 from parsel_h5.middleware import HtmlFiveResponseMiddleware
 from parsel_h5.response import HtmlFiveResponse
 from parsel_h5.selector import (
-    HtmlFiveParseError,
-    HtmlFiveSelectError,
     HtmlFiveSelector,
-    HtmlFiveSelectorError,
     HtmlFiveSelectorList,
 )
 from parsel_h5.xpath import XPathConversionError
 
 __all__ = [
-    "HtmlFiveParseError",
     "HtmlFiveResponse",
     "HtmlFiveResponseMiddleware",
-    "HtmlFiveSelectError",
     "HtmlFiveSelector",
-    "HtmlFiveSelectorError",
     "HtmlFiveSelectorList",
     "XPathConversionError",
 ]

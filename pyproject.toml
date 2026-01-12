@@ -19,6 +19,7 @@ dependencies = [
     "markupever>=0.3.2",
     "parsel>=1.10.0",
     "scrapy>=2.11.0",
+    "typing-extensions>=4.15.0",
 ]
 
 [dependency-groups]

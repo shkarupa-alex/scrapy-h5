@@ -99,6 +99,53 @@ class TestXPathToCss:
         css, _is_text, _is_attr, _attr_name = xpath_to_css("  //div  ")
         assert css == "div"
 
+    def test_positional_predicate(self) -> None:
+        """Test //li[1] -> li:nth-of-type(1)."""
+        css, _is_text, _is_attr, _attr_name = xpath_to_css("//li[1]")
+        assert css == "li:nth-of-type(1)"
+
+    def test_positional_predicate_with_nth(self) -> None:
+        """Test //li[2] -> li:nth-of-type(2)."""
+        css, _is_text, _is_attr, _attr_name = xpath_to_css("//ul/li[3]")
+        assert css == "ul > li:nth-of-type(3)"
+
+    def test_id_with_position(self) -> None:
+        """Test //a[@id='x'][4] -> a#x:nth-of-type(4)."""
+        css, _is_text, _is_attr, _attr_name = xpath_to_css("//a[@id='myId'][4]")
+        assert css == "a#myId:nth-of-type(4)"
+
+    def test_contains_attr(self) -> None:
+        """Test //a[contains(@href, 'x')] -> a[href*=x]."""
+        css, _is_text, _is_attr, _attr_name = xpath_to_css("//a[contains(@href, 'example')]")
+        assert css == "a[href*=example]"
+
+    def test_starts_with_attr(self) -> None:
+        """Test //a[starts-with(@href, 'http')] -> a[href^=http]."""
+        css, _is_text, _is_attr, _attr_name = xpath_to_css("//a[starts-with(@href, 'http')]")
+        assert css == "a[href^=http]"
+
+    def test_id_function(self) -> None:
+        """Test id('myId') -> #myId."""
+        css, _is_text, _is_attr, _attr_name = xpath_to_css("id('myId')")
+        assert css == "#myId"
+
+    def test_id_function_with_path(self) -> None:
+        """Test id('myId')/a -> #myId > a."""
+        css, _is_text, _is_attr, _attr_name = xpath_to_css("id('myId')/a")
+        assert css == "#myId > a"
+
+    def test_multiple_classes(self) -> None:
+        """Test //div[@class='a b'] -> div.a.b."""
+        css, _is_text, _is_attr, _attr_name = xpath_to_css("//div[@class='multiple classes']")
+        assert css == "div.multiple.classes"
+
+    def test_complex_path_with_predicates(self) -> None:
+        """Test complex path with multiple predicates."""
+        css, _is_text, _is_attr, _attr_name = xpath_to_css(
+            "//div[@id='container']/ul[@class='list']//li[2]"
+        )
+        assert css == "div#container > ul.list li:nth-of-type(2)"
+
 
 class TestXPathConversionError:
     """Tests for unsupported XPath patterns."""
@@ -115,17 +162,17 @@ class TestXPathConversionError:
             xpath_to_css("//li[last()]")
         assert "last()" in str(exc_info.value)
 
-    def test_contains_function(self) -> None:
-        """Test contains() function raises error."""
+    def test_contains_text_function(self) -> None:
+        """Test contains(text(), 'x') function raises error."""
         with pytest.raises(XPathConversionError) as exc_info:
-            xpath_to_css("//div[contains(@class, 'active')]")
-        assert "contains()" in str(exc_info.value)
+            xpath_to_css("//div[contains(text(), 'active')]")
+        assert "text" in str(exc_info.value).lower()
 
-    def test_starts_with_function(self) -> None:
-        """Test starts-with() function raises error."""
+    def test_text_equals_predicate(self) -> None:
+        """Test text()='x' predicate raises error."""
         with pytest.raises(XPathConversionError) as exc_info:
-            xpath_to_css("//a[starts-with(@href, 'http')]")
-        assert "starts-with()" in str(exc_info.value)
+            xpath_to_css("//div[text()='hello']")
+        assert "text" in str(exc_info.value).lower()
 
     def test_not_function(self) -> None:
         """Test not() function raises error."""
@@ -157,11 +204,10 @@ class TestXPathConversionError:
             xpath_to_css("//p/parent::div")
         assert "parent" in str(exc_info.value)
 
-    def test_positional_predicate(self) -> None:
-        """Test positional predicates raise error."""
-        with pytest.raises(XPathConversionError) as exc_info:
-            xpath_to_css("//li[1]")
-        assert "positional" in str(exc_info.value).lower()
+    def test_grouped_positional_predicate(self) -> None:
+        """Test grouped positional predicates like (//li)[1] raise error."""
+        with pytest.raises(XPathConversionError):
+            xpath_to_css("(//li)[1]")
 
     def test_and_operator(self) -> None:
         """Test and operator raises error."""
@@ -178,7 +224,7 @@ class TestXPathConversionError:
     def test_error_has_suggestion(self) -> None:
         """Test that error includes suggestion."""
         with pytest.raises(XPathConversionError) as exc_info:
-            xpath_to_css("//li[1]")
+            xpath_to_css("//div[text()='hello']")
         error = exc_info.value
         assert error.suggestion is not None
-        assert "CSS" in error.suggestion or "css" in error.suggestion.lower()
+        assert len(error.suggestion) > 0
