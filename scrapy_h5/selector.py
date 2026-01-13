@@ -133,6 +133,11 @@ class HtmlFiveSelector(object_ref):
 
     selectorlist_cls = HtmlFiveSelectorList
 
+    @property
+    def root(self) -> selectolax.lexbor.LexborNode | markupever.dom.BaseNode:
+        """Return the root node of the selector (compatibility with Scrapy's Selector API)."""
+        return self._root
+
     def __init__(
         self,
         backend: str,

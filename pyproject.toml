@@ -12,7 +12,7 @@ enabled = true
 [project]
 name = "scrapy-h5"
 dynamic = ["version"]
-description = "Parsel with html5ever parser for HTML"
+description = "Scrapy HTML5 support"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -20,6 +20,7 @@ dependencies = [
     "parsel>=1.10.0",
     "scrapy>=2.14.1",
     "selectolax>=0.4.6",
+    "w3lib>=2.3.1",
 ]
 
 [dependency-groups]

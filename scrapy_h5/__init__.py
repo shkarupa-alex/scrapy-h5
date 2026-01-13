@@ -7,6 +7,7 @@ Main components:
 - HtmlFiveSelectorList: List of HtmlFiveSelector instances
 - HtmlFiveResponse: Scrapy response class with HtmlFiveSelector
 - HtmlFiveResponseMiddleware: Scrapy Downloader Middleware for automatic html5 parsing
+- LinkExtractor: Link extractor using HTML5 parsers
 
 Usage:
     # In settings.py
@@ -21,8 +22,14 @@ Usage:
 
         # Common XPath patterns are converted to CSS
         links = response.xpath('//a/@href').getall()
+
+    # Using LinkExtractor
+    from scrapy_h5 import LinkExtractor
+    extractor = LinkExtractor(allow=r'/products/')
+    links = extractor.extract_links(response)
 """
 
+from scrapy_h5.extractor import LinkExtractor
 from scrapy_h5.middleware import HtmlFiveResponseMiddleware
 from scrapy_h5.response import HtmlFiveResponse
 from scrapy_h5.selector import (
@@ -35,6 +42,7 @@ __all__ = [
     "HtmlFiveResponseMiddleware",
     "HtmlFiveSelector",
     "HtmlFiveSelectorList",
+    "LinkExtractor",
 ]
 
 __version__ = "0.1.0"
