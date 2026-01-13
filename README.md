@@ -41,7 +41,7 @@ DOWNLOADER_MIDDLEWARES = {
 }
 
 # Optional: disable globally (backend by default)
-# HTML5_BACKEND = False
+# HTML5_BACKEND = None
 ```
 
 ### 2. Use in your spider
