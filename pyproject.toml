@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 enabled = true
 
 [project]
-name = "parsel-h5"
+name = "scrapy-h5"
 dynamic = ["version"]
 description = "Parsel with html5ever parser for HTML"
 readme = "README.md"
@@ -18,8 +18,8 @@ requires-python = ">=3.10"
 dependencies = [
     "markupever>=0.3.2",
     "parsel>=1.10.0",
-    "scrapy>=2.11.0",
-    "typing-extensions>=4.15.0",
+    "scrapy>=2.14.1",
+    "selectolax>=0.4.6",
 ]
 
 [dependency-groups]

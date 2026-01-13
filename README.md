@@ -1,29 +1,35 @@
 # Parsel H5
 
-Scrapy integration for the `html5ever` HTML parser.
+Scrapy integration for the `html5ever` and `lexbor` HTML parsers.
 
-This package provides a Scrapy Downloader Middleware that replaces the default `lxml`-based HTML parsing with
-`html5ever`, a browser-grade HTML5 parser written in Rust.
+This package provides a Scrapy Downloader Middleware that replaces the default `lxml`-based HTML parsing with a HTML5
+one.
 
 ## Why html5ever?
 
 - **Better HTML5 compliance**: Parses HTML the way browsers do
 - **Handles malformed HTML gracefully**: More forgiving with real-world HTML
-- **Fast**: Rust-based parser with Python bindings (`markupever`)
+- **As fast as Parsel**: Rust-based parser with Python bindings (`markupever`)
+
+## Why Lexbor?
+
+- **Fastest HTML5 parser**: C-based parser with Python bindings (`selectolax`)
+- **Better HTML5 compliance**: Parses HTML the way browsers do
+- **Handles malformed HTML gracefully**: More forgiving with real-world HTML
 
 ## Installation
 
 ```bash
-pip install parsel-h5
+pip install scrapy-h5
 ```
 
 Or with uv:
 
 ```bash
-uv add parsel-h5
+uv add scrapy-h5
 ```
 
-## Quick Start
+## Quick start
 
 ### 1. Enable the middleware in your Scrapy project
 
@@ -31,11 +37,11 @@ Add to your `settings.py`:
 
 ```python
 DOWNLOADER_MIDDLEWARES = {
-    'parsel_h5.HtmlFiveResponseMiddleware': 950,
+    'scrapy_h5.HtmlFiveResponseMiddleware': 950,
 }
 
-# Optional: disable globally (enabled by default)
-# HTML5_ENABLED = False
+# Optional: disable globally (backend by default)
+# HTML5_BACKEND = False
 ```
 
 ### 2. Use in your spider
@@ -64,34 +70,20 @@ class MySpider(scrapy.Spider):
             }
 ```
 
-## XPath Support
+## XPath and JMESPath support
 
-Common XPath patterns are automatically converted to CSS selectors:
+XPath and JMESPath selectors are not supported. Use CSS selectors instead.
 
-```python
-# These XPath patterns work:
-response.xpath('//div')  # -> CSS: div
-response.xpath('//div/p')  # -> CSS: div > p (child)
-response.xpath('//div//p')  # -> CSS: div p (descendant)
-response.xpath('//*[@id="main"]')  # -> CSS: #main
-response.xpath('//*[@class="x"]')  # -> CSS: .x
-response.xpath('//a/@href')  # -> CSS: a (extracts href)
-response.xpath('//p/text()')  # -> CSS: p (extracts text)
-```
+## Per-request control
 
-**Note**: Complex XPath expressions (predicates, axes like `following-sibling::`, functions like `contains()`) are not
-supported and will raise `XPathConversionError`. Use CSS selectors instead.
-
-## Per-Request Control
-
-You can enable/disable html5ever parsing per request using `meta`:
+You can change/disable html5 backend per request using `meta`:
 
 ```python
 def start_requests(self):
-    # HTML5 parsing enabled (default)
+    # HTML5 parsing backend (default)
     yield scrapy.Request(url, callback=self.parse)
 
-    # Disable html5ever for this request (use lxml instead)
+    # Disable html5 for this request (use lxml instead)
     yield scrapy.Request(
         url2,
         callback=self.parse_legacy,
@@ -100,21 +92,21 @@ def start_requests(self):
 
 
 def parse_with_html5(self, response):
-    # Force html5ever even if HTML5_ENABLED=False
+    # Force html5 even if HTML5_BACKEND=False
     yield scrapy.Request(
         url,
         callback=self.parse,
-        meta={'use_html5': True}
+        meta={'use_html5': 'html5ever'}
     )
 ```
 
-## API Reference
+## API reference
 
 ### Classes
 
-- **`HtmlFiveSelector`**: Selector class wrapping `html5ever` elements
+- **`HtmlFiveSelector`**: Selector class wrapping `html5ever` and `lexbor` elements
 - **`HtmlFiveSelectorList`**: List of selectors with bulk operations
-- **`HtmlFiveResponse`**: Response class with html5ever-based selector
+- **`HtmlFiveResponse`**: Response class with html5-based selector
 - **`HtmlFiveResponseMiddleware`**: Scrapy Downloader Middleware that replaces `HtmlResponse` with `HtmlFiveResponse`
 
 ### Exceptions
@@ -126,23 +118,17 @@ def parse_with_html5(self, response):
 
 ### Settings
 
-| Setting         | Default | Description                                 |
-|-----------------|---------|---------------------------------------------|
-| `HTML5_ENABLED` | `True`  | Global enable/disable for html5ever parsing |
+| Setting         | Default  | Description                                                              |
+|-----------------|----------|--------------------------------------------------------------------------|
+| `HTML5_BACKEND` | `lexbor` | Global html5 backend. `lexbor` and `html5ever` enables, `False` disables |
 
-### Request Meta
+### Request meta
 
-| Key         | Type   | Description                                            |
-|-------------|--------|--------------------------------------------------------|
-| `use_html5` | `bool` | Per-request override. `True` enables, `False` disables |
+| Key         | Type   | Description                                                              |
+|-------------|--------|--------------------------------------------------------------------------|
+| `use_html5` | `bool` | Per-request override. `lexbor` and `html5ever` enables, `False` disables |
 
-## Limitations
-
-1. **XPath**: Only common patterns are supported. Complex expressions need to use CSS selectors.
-2. **Namespaces**: XML namespace support is not available. `remove_namespaces()` is a no-op.
-3. **JMESPath**: JSON selectors pass through to the original parsel implementation.
-
-## Middleware Priority
+## Middleware priority
 
 The default priority (950) is chosen to run:
 
@@ -154,7 +140,7 @@ Adjust the priority if needed:
 
 ```python
 DOWNLOADER_MIDDLEWARES = {
-    'parsel_h5.HtmlFiveResponseMiddleware': 400,  # Earlier in the chain
+    'scrapy_h5.HtmlFiveResponseMiddleware': 400,  # Earlier in the chain
 }
 ```
 

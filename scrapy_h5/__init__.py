@@ -1,18 +1,17 @@
-"""parsel-h5: Parsel with html5ever parser for HTML.
+"""scrapy-h5: HTML5 parsing for Scrapy.
 
-This package provides Scrapy integration for html5ever-based HTML parsing
-via the markupever Python package.
+This package provides Scrapy integration for html5-based HTML parsing.
 
 Main components:
-- HtmlFiveSelector: Selector class using html5ever for parsing
+- HtmlFiveSelector: Selector class using html5 for parsing
 - HtmlFiveSelectorList: List of HtmlFiveSelector instances
 - HtmlFiveResponse: Scrapy response class with HtmlFiveSelector
-- HtmlFiveResponseMiddleware: Scrapy Downloader Middleware for automatic html5ever parsing
+- HtmlFiveResponseMiddleware: Scrapy Downloader Middleware for automatic html5 parsing
 
 Usage:
     # In settings.py
     DOWNLOADER_MIDDLEWARES = {
-        'parsel_h5.HtmlFiveResponseMiddleware': 543,
+        'scrapy_h5.HtmlFiveResponseMiddleware': 543,
     }
 
     # In spider
@@ -24,20 +23,18 @@ Usage:
         links = response.xpath('//a/@href').getall()
 """
 
-from parsel_h5.middleware import HtmlFiveResponseMiddleware
-from parsel_h5.response import HtmlFiveResponse
-from parsel_h5.selector import (
+from scrapy_h5.middleware import HtmlFiveResponseMiddleware
+from scrapy_h5.response import HtmlFiveResponse
+from scrapy_h5.selector import (
     HtmlFiveSelector,
     HtmlFiveSelectorList,
 )
-from parsel_h5.xpath import XPathConversionError
 
 __all__ = [
     "HtmlFiveResponse",
     "HtmlFiveResponseMiddleware",
     "HtmlFiveSelector",
     "HtmlFiveSelectorList",
-    "XPathConversionError",
 ]
 
 __version__ = "0.1.0"

@@ -1,25 +1,29 @@
-"""HtmlFiveResponse class extending Scrapy's HtmlResponse with html5ever parsing."""
+"""HtmlFiveResponse class extending Scrapy's HtmlResponse with html5 parsing."""
 
-from __future__ import annotations
 import logging
-from typing import Any, cast
+from typing import Any
 
 from scrapy.http import HtmlResponse
 
-from parsel_h5.selector import HtmlFiveSelector, HtmlFiveSelectorList
+from scrapy_h5.selector import HtmlFiveSelector, HtmlFiveSelectorList
 
 logger = logging.getLogger(__name__)
 
 
 class HtmlFiveResponse(HtmlResponse):
-    """HtmlResponse subclass that uses html5ever (via markupever) for parsing.
+    """HtmlResponse subclass that uses html5 for parsing.
 
     This response class provides the same API as Scrapy's HtmlResponse,
-    but uses html5ever for HTML parsing instead of lxml, providing better
+    but uses html5 parser instead of lxml, providing better
     HTML5 compliance.
     """
 
+    _html5_backend = None
     _cached_h5_selector: HtmlFiveSelector | None = None
+
+    def with_backend(self, backend: str) -> "HtmlFiveResponse":
+        self._html5_backend = backend
+        return self
 
     @property
     def selector(self) -> HtmlFiveSelector:
@@ -28,16 +32,20 @@ class HtmlFiveResponse(HtmlResponse):
         The selector is lazily created and cached.
         """
         if self._cached_h5_selector is None:
-            self._cached_h5_selector = HtmlFiveSelector(text=self.text)
+            self._cached_h5_selector = HtmlFiveSelector(self._html5_backend, text=self.text)
         return self._cached_h5_selector
 
-    def xpath(self, query: str, **kwargs: Any) -> HtmlFiveSelectorList:
+    def xpath(
+        self,
+        query: str,
+        **kwargs: Any,  # noqa: ANN401
+    ) -> HtmlFiveSelectorList:
         """Select elements using XPath (converted to CSS).
 
         Note: Only common XPath patterns are supported. Complex expressions
         will raise XPathConversionError.
         """
-        return cast("HtmlFiveSelectorList", self.selector.xpath(query, **kwargs))
+        return self.selector.xpath(query, **kwargs)
 
     def css(self, query: str) -> HtmlFiveSelectorList:
         """Select elements using CSS selectors.
@@ -45,4 +53,4 @@ class HtmlFiveResponse(HtmlResponse):
         Supports standard CSS selectors plus parsel's ::text and ::attr()
         pseudo-elements.
         """
-        return cast("HtmlFiveSelectorList", self.selector.css(query))
+        return self.selector.css(query)
