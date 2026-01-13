@@ -10,7 +10,11 @@ class TestHtmlFiveSelector:
 
     SAMPLE_HTML = """
     <html>
-    <head><title>Test Page</title></head>
+    <head>
+        <title>Test Page</title>
+        <link rel="icon" href="/ico/favicon.ico" type="image/x-icon"/>
+        <link rel="canonical" href="https://www.example.com/preferred-version-of-page" />
+    </head>
     <body>
         <div id="main" class="container primary">
             <h1>Hello World</h1>
@@ -107,6 +111,14 @@ class TestHtmlFiveSelector:
         assert "/link1" in hrefs
         assert "/link2" in hrefs
         assert "/link3" in hrefs
+
+    @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
+    def test_css_complex(self, backend: str) -> None:
+        """Test CSS attribute selector."""
+        sel = HtmlFiveSelector(backend, text=self.SAMPLE_HTML)
+        result = sel.css("head > link[rel='canonical']::attr(href)")
+        assert len(result) == 1
+        assert result[0].get() == "https://www.example.com/preferred-version-of-page"
 
     @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
     def test_getall(self, backend: str) -> None:

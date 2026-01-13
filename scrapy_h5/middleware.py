@@ -56,7 +56,6 @@ class HtmlFiveResponseMiddleware:
         self,
         request: Request,
         response: Response,
-        spider: Spider,  # noqa: ARG002
     ) -> Response:
         """Process response and optionally replace with HtmlFiveResponse.
 

@@ -34,9 +34,8 @@ class TestHtmlFiveResponseMiddleware:
         middleware = self._create_middleware(backend=backend)
         request = self._create_request()
         response = self._create_html_response()
-        spider = MagicMock(spec=Spider)
 
-        result = middleware.process_response(request, response, spider)
+        result = middleware.process_response(request, response)
 
         assert isinstance(result, HtmlFiveResponse)
         assert result.url == response.url
@@ -47,9 +46,8 @@ class TestHtmlFiveResponseMiddleware:
         middleware = self._create_middleware(backend=None)
         request = self._create_request()
         response = self._create_html_response()
-        spider = MagicMock(spec=Spider)
 
-        result = middleware.process_response(request, response, spider)
+        result = middleware.process_response(request, response)
 
         assert isinstance(result, HtmlResponse)
         assert not isinstance(result, HtmlFiveResponse)
@@ -60,9 +58,8 @@ class TestHtmlFiveResponseMiddleware:
         middleware = self._create_middleware(backend=backend)
         request = self._create_request(use_html5=None)
         response = self._create_html_response()
-        spider = MagicMock(spec=Spider)
 
-        result = middleware.process_response(request, response, spider)
+        result = middleware.process_response(request, response)
 
         assert isinstance(result, HtmlResponse)
         assert not isinstance(result, HtmlFiveResponse)
@@ -73,9 +70,8 @@ class TestHtmlFiveResponseMiddleware:
         middleware = self._create_middleware(backend=None)
         request = self._create_request(use_html5=backend)
         response = self._create_html_response()
-        spider = MagicMock(spec=Spider)
 
-        result = middleware.process_response(request, response, spider)
+        result = middleware.process_response(request, response)
 
         assert isinstance(result, HtmlFiveResponse)
 
@@ -85,9 +81,8 @@ class TestHtmlFiveResponseMiddleware:
         middleware = self._create_middleware(backend=backend)
         request = self._create_request()
         response = XmlResponse(url="http://example.com", body=b"<root/>")
-        spider = MagicMock(spec=Spider)
 
-        result = middleware.process_response(request, response, spider)
+        result = middleware.process_response(request, response)
 
         assert isinstance(result, XmlResponse)
         assert result is response
@@ -98,9 +93,8 @@ class TestHtmlFiveResponseMiddleware:
         middleware = self._create_middleware(backend=backend)
         request = self._create_request()
         response = JsonResponse(url="http://example.com", body=b'{"key": "value"}')
-        spider = MagicMock(spec=Spider)
 
-        result = middleware.process_response(request, response, spider)
+        result = middleware.process_response(request, response)
 
         assert isinstance(result, JsonResponse)
         assert result is response
@@ -111,9 +105,8 @@ class TestHtmlFiveResponseMiddleware:
         middleware = self._create_middleware(backend=backend)
         request = self._create_request()
         response = TextResponse(url="http://example.com", body=b"plain text")
-        spider = MagicMock(spec=Spider)
 
-        result = middleware.process_response(request, response, spider)
+        result = middleware.process_response(request, response)
 
         # TextResponse is not HtmlResponse, so passes through
         assert isinstance(result, TextResponse)
@@ -125,9 +118,8 @@ class TestHtmlFiveResponseMiddleware:
         middleware = self._create_middleware(backend=backend)
         request = self._create_request()
         response = HtmlFiveResponse(url="http://example.com", body=b"<html>test</html>")
-        spider = MagicMock(spec=Spider)
 
-        result = middleware.process_response(request, response, spider)
+        result = middleware.process_response(request, response)
 
         assert isinstance(result, HtmlFiveResponse)
         assert result.url == response.url
