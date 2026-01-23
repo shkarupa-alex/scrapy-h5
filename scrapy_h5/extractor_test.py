@@ -165,7 +165,7 @@ class TestCssLinkExtractor:
         # With unique=False
         extractor_not_unique = LinkExtractor(unique=False)
         links_not_unique = extractor_not_unique.extract_links(response)
-        assert len(links_not_unique) == 3  # noqa: PLR2004
+        assert len(links_not_unique) == 3
 
     @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
     def test_extract_links_strip_whitespace(self, backend: str) -> None:
@@ -282,7 +282,7 @@ class TestCssLinkExtractor:
         links = extractor.extract_links(response)
 
         urls = [link.url for link in links]
-        assert len(urls) == 2  # noqa: PLR2004
+        assert len(urls) == 2
         assert any("/products" in url for url in urls)
         assert any("/services" in url for url in urls)
         assert not any("/about" in url for url in urls)
@@ -307,7 +307,7 @@ class TestHtmlFiveParserLinkExtractor:
         )
 
         links = list(extractor._iter_links(sel._root))  # noqa: SLF001
-        assert len(links) == 2  # noqa: PLR2004
+        assert len(links) == 2
 
         # Each link should be (element, attr_name, attr_value)
         for _el, attr, value in links:
@@ -428,7 +428,7 @@ class TestHtmlFiveParserLinkExtractor:
         assert "/link1" in values
         assert "/link2" in values
         assert "/link3" in values
-        assert len(links) == 3  # noqa: PLR2004
+        assert len(links) == 3
 
     @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
     def test_iter_links_with_empty_href(self, backend: str) -> None:

@@ -2,12 +2,10 @@
 
 from scrapy import Request, Spider, signals
 from scrapy.crawler import Crawler
-from scrapy.http import HtmlResponse, Response
+from scrapy.http import HtmlResponse, Response, TextResponse
 from scrapy.responsetypes import responsetypes
 
 from scrapy_h5.response import HtmlFiveResponse
-
-_HTML_CONTENT_TYPES = {"text/html", "application/xhtml+xml"}
 
 
 class HtmlFiveResponseMiddleware:
@@ -56,16 +54,15 @@ class HtmlFiveResponseMiddleware:
         request: Request,
         response: Response,
     ) -> Response:
-        """Process response and optionally replace with HtmlFiveResponse.
-
-        Handles two cases:
-        1. Response is already HtmlResponse - replace with HtmlFiveResponse
-        2. Response is plain Response but has HTML content-type - convert to HtmlResponse then HtmlFiveResponse
-        """
+        """Process response and optionally replace with HtmlFiveResponse."""
         # Check per-request override
         scrapy_h5_backend = request.meta.get("scrapy_h5_backend", self.backend)
         if not scrapy_h5_backend:
             # Disabled globally or explicitly (for this request)
+            return response
+
+        # Only these types of response can be possibly parsed with HTML parser
+        if not isinstance(response, (Response, TextResponse, HtmlResponse)):
             return response
 
         guess_type = responsetypes.from_args(response.headers, response.url, None, response.body)

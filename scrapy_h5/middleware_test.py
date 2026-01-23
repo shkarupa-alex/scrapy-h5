@@ -54,7 +54,7 @@ class TestHtmlFiveResponseMiddleware:
 
     @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
     def test_process_response_meta_disable(self, backend: str) -> None:
-        """Test per-request disable via meta."""
+        """Test per-request disable via meta using scrapy_h5_backend."""
         middleware = self._create_middleware(backend=backend)
         request = self._create_request(scrapy_h5_backend=None)
         response = self._create_html_response()

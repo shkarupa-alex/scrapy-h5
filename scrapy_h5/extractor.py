@@ -172,7 +172,7 @@ class HtmlFiveParserLinkExtractor(LxmlParserLinkExtractor):
             el: The element to extract text from.
 
         Returns:
-            The text content of the element, or empty string if none.
+            The text content of element, or empty string if none.
 
         Raises:
             TypeError if element type is not supported.
@@ -192,7 +192,7 @@ class HtmlFiveParserLinkExtractor(LxmlParserLinkExtractor):
         """Get an attribute value from an element.
 
         Args:
-            el: The element to get the attribute from.
+            el: The element to get attribute from.
             attr: The attribute name.
 
         Returns:
@@ -212,7 +212,7 @@ class HtmlFiveParserLinkExtractor(LxmlParserLinkExtractor):
         self,
         document: selectolax.lexbor.LexborNode | markupever.dom.BaseNode,
     ) -> Iterable[tuple[selectolax.lexbor.LexborNode | markupever.dom.BaseNode, str, str]]:
-        """Iterate over links in the document.
+        """Iterate over links in document.
 
         Dispatches to the appropriate backend-specific method based on document type.
 
@@ -222,9 +222,6 @@ class HtmlFiveParserLinkExtractor(LxmlParserLinkExtractor):
 
         Yields:
             Tuples of (element, attribute_name, attribute_value) for each link found.
-
-        Raises:
-            TypeError if document type is not supported.
         """
         if isinstance(document, selectolax.lexbor.LexborNode):
             yield from self._iter_links_lexbor(document)

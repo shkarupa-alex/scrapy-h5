@@ -77,21 +77,21 @@ class TestHtmlFiveSelector:
         """Test CSS descendant selector."""
         sel = HtmlFiveSelector(backend, text=self.SAMPLE_HTML)
         result = sel.css("ul a")
-        assert len(result) == 3  # noqa: PLR2004
+        assert len(result) == 3
 
     @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
     def test_css_child(self, backend: str) -> None:
         """Test CSS child selector."""
         sel = HtmlFiveSelector(backend, text=self.SAMPLE_HTML)
         result = sel.css("ul > li")
-        assert len(result) == 3  # noqa: PLR2004
+        assert len(result) == 3
 
     @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
     def test_css_attribute(self, backend: str) -> None:
         """Test CSS attribute selector."""
         sel = HtmlFiveSelector(backend, text=self.SAMPLE_HTML)
         result = sel.css("a[href]")
-        assert len(result) == 3  # noqa: PLR2004
+        assert len(result) == 3
 
     @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
     def test_css_text_pseudo(self, backend: str) -> None:
@@ -106,7 +106,7 @@ class TestHtmlFiveSelector:
         """Test ::attr() pseudo-element."""
         sel = HtmlFiveSelector(backend, text=self.SAMPLE_HTML)
         result = sel.css("a::attr(href)")
-        assert len(result) == 3  # noqa: PLR2004
+        assert len(result) == 3
         hrefs = result.getall()
         assert "/link1" in hrefs
         assert "/link2" in hrefs
@@ -199,10 +199,10 @@ class TestHtmlFiveSelector:
         sel = HtmlFiveSelector(backend, text=self.SAMPLE_HTML)
         # Chain element selectors
         result = sel.css("#main").css("a")
-        assert len(result) == 3  # noqa: PLR2004
+        assert len(result) == 3
         # Then get text from the chain
         texts = result.css("::text").getall()
-        assert len(texts) == 3  # noqa: PLR2004
+        assert len(texts) == 3
 
     @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
     def test_drop_single_element(self, backend: str) -> None:
@@ -248,7 +248,7 @@ class TestHtmlFiveSelectorList:
         result = sel.css("li")
         sliced = result[1:]
         assert isinstance(sliced, HtmlFiveSelectorList)
-        assert len(sliced) == 2  # noqa: PLR2004
+        assert len(sliced) == 2
 
     @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
     def test_css_on_list(self, backend: str) -> None:

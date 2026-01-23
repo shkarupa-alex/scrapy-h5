@@ -50,7 +50,7 @@ no-lines-before = ["standard-library"]
 known-third-party = []
 
 [tool.ruff.lint.extend-per-file-ignores]
-"*_test.py" = ["S101", "S311"]
+"*_test.py" = ["S101", "S311", "PLR2004"]
 
 [tool.mypy]
 strict = true
