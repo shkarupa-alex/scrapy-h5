@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 from scrapy import Request, Spider
+from scrapy.downloadermiddlewares.httpcompression import HttpCompressionMiddleware
 from scrapy.http import Response
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -80,7 +81,8 @@ class SimpleCrawlSpider(CrawlSpider):
 def test_crawl_spider_with_link_extractor(backend: str) -> None:
     """Test CrawlSpider using LinkExtractor with HtmlFiveResponse."""
     spider = SimpleCrawlSpider()
-    middleware = HtmlFiveResponseMiddleware(backend=backend)
+    hcm_middleware = HttpCompressionMiddleware()
+    h5_middleware = HtmlFiveResponseMiddleware(backend=backend)
 
     # Create HTML response with links
     html_body = b"""
@@ -103,7 +105,8 @@ def test_crawl_spider_with_link_extractor(backend: str) -> None:
 
     # Process through middleware
     request = Request(base_response.url, callback=spider.parse_item)
-    result = middleware.process_response(request, base_response)
+    result = hcm_middleware.process_response(request, base_response)
+    result = h5_middleware.process_response(request, result)
 
     # Should be HtmlFiveResponse
     assert isinstance(result, HtmlFiveResponse)
