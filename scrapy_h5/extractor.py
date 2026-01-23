@@ -29,7 +29,7 @@ from scrapy.utils.misc import rel_has_nofollow
 from w3lib.html import strip_html5_whitespace
 from w3lib.url import safe_url_string
 
-from scrapy_h5 import HtmlFiveResponse
+from scrapy_h5.response import HtmlFiveResponse
 
 logger = logging.getLogger(__name__)
 

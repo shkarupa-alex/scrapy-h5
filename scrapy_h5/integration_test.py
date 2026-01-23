@@ -1,5 +1,6 @@
 """Integration test with real Scrapy spider."""
 
+import gzip
 from typing import Any
 
 import pytest
@@ -40,7 +41,7 @@ def test_real_spider_with_scrapy_h5_backend(backend: str) -> None:
     base_response = Response(
         url="http://example.com",
         body=b"<html><head><title>Test Page</title></head><body>Content</body></html>",
-        headers={"Content-Type": "text/html"},
+        headers={b"Content-Type": [b"text/html"]},
     )
 
     # Process through middleware
@@ -96,8 +97,8 @@ def test_crawl_spider_with_link_extractor(backend: str) -> None:
 
     base_response = Response(
         url="http://example.com",
-        body=html_body,
-        headers={"Content-Type": "text/html"},
+        body=gzip.compress(html_body),
+        headers={b"Content-Type": [b"text/html"], b"Content-Encoding": [b"gzip"]},
     )
 
     # Process through middleware
