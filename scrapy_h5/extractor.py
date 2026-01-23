@@ -12,6 +12,7 @@ Example:
     >>> links = extractor.extract_links(response)
 """
 
+import logging
 import operator
 from collections.abc import Callable, Iterable
 from functools import partial
@@ -21,11 +22,16 @@ from urllib.parse import urljoin
 import markupever
 import selectolax.lexbor
 from parsel import Selector
+from scrapy.http import TextResponse
 from scrapy.link import Link
 from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor, LxmlParserLinkExtractor, _nons, _RegexOrSeveral
 from scrapy.utils.misc import rel_has_nofollow
 from w3lib.html import strip_html5_whitespace
 from w3lib.url import safe_url_string
+
+from scrapy_h5 import HtmlFiveResponse
+
+logger = logging.getLogger(__name__)
 
 
 class LinkExtractor(LxmlLinkExtractor):
@@ -98,6 +104,13 @@ class LinkExtractor(LxmlLinkExtractor):
             strip=strip,
             canonicalized=not canonicalize,
         )
+
+    def extract_links(self, response: TextResponse) -> list[Link]:
+        if not isinstance(response, HtmlFiveResponse):
+            logger.warning("Unsupported response type: %s", type(response))
+            return []
+
+        return super().extract_links(response)
 
 
 class HtmlFiveParserLinkExtractor(LxmlParserLinkExtractor):
