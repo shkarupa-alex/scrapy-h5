@@ -1,9 +1,11 @@
 """Integration test with real Scrapy spider."""
 
+import gzip
 from typing import Any
 
 import pytest
 from scrapy import Request, Spider
+from scrapy.downloadermiddlewares.httpcompression import HttpCompressionMiddleware
 from scrapy.http import Response
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -40,7 +42,7 @@ def test_real_spider_with_scrapy_h5_backend(backend: str) -> None:
     base_response = Response(
         url="http://example.com",
         body=b"<html><head><title>Test Page</title></head><body>Content</body></html>",
-        headers={"Content-Type": "text/html"},
+        headers={b"Content-Type": [b"text/html"]},
     )
 
     # Process through middleware
@@ -79,7 +81,8 @@ class SimpleCrawlSpider(CrawlSpider):
 def test_crawl_spider_with_link_extractor(backend: str) -> None:
     """Test CrawlSpider using LinkExtractor with HtmlFiveResponse."""
     spider = SimpleCrawlSpider()
-    middleware = HtmlFiveResponseMiddleware(backend=backend)
+    hcm_middleware = HttpCompressionMiddleware()
+    h5_middleware = HtmlFiveResponseMiddleware(backend=backend)
 
     # Create HTML response with links
     html_body = b"""
@@ -96,13 +99,14 @@ def test_crawl_spider_with_link_extractor(backend: str) -> None:
 
     base_response = Response(
         url="http://example.com",
-        body=html_body,
-        headers={"Content-Type": "text/html"},
+        body=gzip.compress(html_body),
+        headers={b"Content-Type": [b"text/html"], b"Content-Encoding": [b"gzip"]},
     )
 
     # Process through middleware
     request = Request(base_response.url, callback=spider.parse_item)
-    result = middleware.process_response(request, base_response)
+    result = hcm_middleware.process_response(request, base_response)
+    result = h5_middleware.process_response(request, result)
 
     # Should be HtmlFiveResponse
     assert isinstance(result, HtmlFiveResponse)
