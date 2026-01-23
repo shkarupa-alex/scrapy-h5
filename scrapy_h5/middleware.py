@@ -1,14 +1,13 @@
 """Scrapy Downloader Middleware for html5-based HTML parsing."""
 
-import logging
-
 from scrapy import Request, Spider, signals
 from scrapy.crawler import Crawler
 from scrapy.http import HtmlResponse, Response
+from scrapy.responsetypes import responsetypes
 
 from scrapy_h5.response import HtmlFiveResponse
 
-logger = logging.getLogger(__name__)
+_HTML_CONTENT_TYPES = {"text/html", "application/xhtml+xml"}
 
 
 class HtmlFiveResponseMiddleware:
@@ -18,18 +17,18 @@ class HtmlFiveResponseMiddleware:
     HtmlFiveResponse instances, which use html5 for parsing instead of lxml.
 
     Settings:
-        HTML5_BACKEND: str | None (default: 'lexbor')
+        SCRAPY_H5_BACKEND: str | None (default: 'lexbor')
             Global enable/disable for html5 parsing.
 
     Per-request control:
-        Set request.meta['use_html5'] = False to disable for a specific request.
-        Set request.meta['use_html5'] = 'html5ever' to force enable (overrides HTML5_BACKEND=False).
+        Set request.meta['scrapy_h5_backend'] = False to disable for a specific request.
+        Set request.meta['scrapy_h5_backend'] = 'html5ever' to force enable (overrides SCRAPY_H5_BACKEND=False).
 
     Usage in settings.py:
         DOWNLOADER_MIDDLEWARES = {
-            'scrapy_h5.HtmlFiveResponseMiddleware': 543,
+            'scrapy_h5.HtmlFiveResponseMiddleware': 650,
         }
-        HTML5_BACKEND = 'html5ever'  # optional, 'lexbor' by default
+        SCRAPY_H5_BACKEND = 'html5ever'  # optional, 'lexbor' by default
     """
 
     def __init__(self, *, backend: str | None = "lexbor") -> None:
@@ -40,7 +39,7 @@ class HtmlFiveResponseMiddleware:
     @classmethod
     def from_crawler(cls, crawler: Crawler) -> "HtmlFiveResponseMiddleware":
         """Create middleware instance from crawler settings."""
-        backend = crawler.settings.get("HTML5_BACKEND", default="lexbor")
+        backend = crawler.settings.get("SCRAPY_H5_BACKEND", default="lexbor")
         middleware = cls(backend=backend)
         crawler.signals.connect(middleware.spider_opened, signal=signals.spider_opened)
         return middleware
@@ -59,18 +58,19 @@ class HtmlFiveResponseMiddleware:
     ) -> Response:
         """Process response and optionally replace with HtmlFiveResponse.
 
-        Only HtmlResponse instances are replaced. Other response types
-        (XmlResponse, JsonResponse, TextResponse, etc.) pass through unchanged.
+        Handles two cases:
+        1. Response is already HtmlResponse - replace with HtmlFiveResponse
+        2. Response is plain Response but has HTML content-type - convert to HtmlResponse then HtmlFiveResponse
         """
-        # Check if this is an HTML response
-        if not isinstance(response, HtmlResponse):
-            return response
-
         # Check per-request override
-        use_html5 = request.meta.get("use_html5", self.backend)
-        if use_html5 is None:
+        scrapy_h5_backend = request.meta.get("scrapy_h5_backend", self.backend)
+        if not scrapy_h5_backend:
             # Disabled globally or explicitly (for this request)
             return response
 
-        # Replace with HtmlFiveResponse
-        return response.replace(cls=HtmlFiveResponse).with_backend(use_html5)
+        guess_type = responsetypes.from_args(response.headers, response.url, None, response.body)
+        if isinstance(response, HtmlResponse) or guess_type is HtmlResponse:
+            return response.replace(cls=HtmlFiveResponse).with_backend(scrapy_h5_backend)
+
+        # Not an HTML response, pass through unchanged
+        return response

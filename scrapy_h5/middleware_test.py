@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from scrapy import Request, Spider
-from scrapy.http import HtmlResponse, JsonResponse, TextResponse, XmlResponse
+from scrapy.http import HtmlResponse, JsonResponse, Response, TextResponse, XmlResponse
 
 from scrapy_h5 import HtmlFiveResponse, HtmlFiveResponseMiddleware, HtmlFiveSelector
 
@@ -56,7 +56,7 @@ class TestHtmlFiveResponseMiddleware:
     def test_process_response_meta_disable(self, backend: str) -> None:
         """Test per-request disable via meta."""
         middleware = self._create_middleware(backend=backend)
-        request = self._create_request(use_html5=None)
+        request = self._create_request(scrapy_h5_backend=None)
         response = self._create_html_response()
 
         result = middleware.process_response(request, response)
@@ -68,7 +68,7 @@ class TestHtmlFiveResponseMiddleware:
     def test_process_response_meta_enable_override(self, backend: str) -> None:
         """Test per-request enable overrides global disable."""
         middleware = self._create_middleware(backend=None)
-        request = self._create_request(use_html5=backend)
+        request = self._create_request(scrapy_h5_backend=backend)
         response = self._create_html_response()
 
         result = middleware.process_response(request, response)
@@ -125,6 +125,24 @@ class TestHtmlFiveResponseMiddleware:
         assert result.url == response.url
         assert result.body == response.body
 
+    @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
+    def test_plain_response_with_html_content_type(self, backend: str) -> None:
+        """Test that plain Response with HTML content-type gets converted."""
+        middleware = self._create_middleware(backend=backend)
+        request = self._create_request()
+        response = Response(
+            url="http://example.com",
+            body=b"<html><body>test</body></html>",
+            headers={"Content-Type": ["text/html"]},
+        )
+
+        result = middleware.process_response(request, response)
+
+        # Should be converted to HtmlFiveResponse
+        assert isinstance(result, HtmlFiveResponse)
+        assert result.url == response.url
+        assert result.body == response.body
+
     def test_from_crawler(self) -> None:
         """Test from_crawler class method."""
         crawler = MagicMock()
@@ -134,10 +152,10 @@ class TestHtmlFiveResponseMiddleware:
         middleware = HtmlFiveResponseMiddleware.from_crawler(crawler)
 
         assert middleware.backend == "html5ever"
-        crawler.settings.get.assert_called_once_with("HTML5_BACKEND", default="lexbor")
+        crawler.settings.get.assert_called_once_with("SCRAPY_H5_BACKEND", default="lexbor")
 
     def test_from_crawler_disabled(self) -> None:
-        """Test from_crawler with HTML5_BACKEND=False."""
+        """Test from_crawler with SCRAPY_H5_BACKEND=False."""
         crawler = MagicMock()
         crawler.settings.get.return_value = "html5ever"
         crawler.signals = MagicMock()
