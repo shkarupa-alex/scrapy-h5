@@ -15,7 +15,7 @@ class SimpleSpider(Spider):
     name = "simple"
     custom_settings = {  # noqa: RUF012
         "DOWNLOADER_MIDDLEWARES": {
-            "scrapy_h5.HtmlFiveResponseMiddleware": 950,
+            "scrapy_h5.HtmlFiveResponseMiddleware": 650,
         },
     }
 
@@ -30,7 +30,7 @@ class SimpleSpider(Spider):
 
 
 @pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
-def test_real_spider_with_html5_backend(backend: str) -> None:
+def test_real_spider_with_scrapy_h5_backend(backend: str) -> None:
     """Test a real Scrapy spider using HtmlFiveResponseMiddleware."""
     spider = SimpleSpider()
     middleware = HtmlFiveResponseMiddleware(backend=backend)
@@ -39,7 +39,7 @@ def test_real_spider_with_html5_backend(backend: str) -> None:
     base_response = Response(
         url="http://example.com",
         body=b"<html><head><title>Test Page</title></head><body>Content</body></html>",
-        headers={"Content-Type": ["text/html"]},
+        headers={"Content-Type": "text/html"},
     )
 
     # Process through middleware

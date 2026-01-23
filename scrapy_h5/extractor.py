@@ -173,12 +173,16 @@ class HtmlFiveParserLinkExtractor(LxmlParserLinkExtractor):
 
         Returns:
             The text content of the element, or empty string if none.
+
+        Raises:
+            TypeError if element type is not supported.
         """
         if isinstance(el, selectolax.lexbor.LexborNode):
             return el.text()
         if isinstance(el, markupever.dom.Element):
             return el.text()
-        return ""
+
+        raise TypeError(f"Unsupported element type {type(el)}")
 
     def _get_element_attr(
         self,
@@ -193,12 +197,16 @@ class HtmlFiveParserLinkExtractor(LxmlParserLinkExtractor):
 
         Returns:
             The attribute value, or None if not present.
+
+        Raises:
+            TypeError if element type is not supported.
         """
         if isinstance(el, selectolax.lexbor.LexborNode):
             return el.attributes.get(attr)
         if isinstance(el, markupever.dom.Element):
             return el.attrs.get(attr)
-        return None
+
+        raise TypeError(f"Unsupported element type {type(el)}")
 
     def _iter_links(
         self,
@@ -216,14 +224,14 @@ class HtmlFiveParserLinkExtractor(LxmlParserLinkExtractor):
             Tuples of (element, attribute_name, attribute_value) for each link found.
 
         Raises:
-            TypeError: If document is not a supported node type.
+            TypeError if document type is not supported.
         """
         if isinstance(document, selectolax.lexbor.LexborNode):
             yield from self._iter_links_lexbor(document)
         elif isinstance(document, markupever.dom.BaseNode):
             yield from self._iter_links_html5ever(document)
         else:
-            raise TypeError(f"Unsupported document type: {type(document)}")
+            raise TypeError(f"Unsupported document type {type(document)}")
 
     def _iter_links_lexbor(
         self,

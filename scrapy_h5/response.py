@@ -15,11 +15,11 @@ class HtmlFiveResponse(HtmlResponse):
     HTML5 compliance.
     """
 
-    _html5_backend = None
+    _scrapy_h5_backend = None
     _cached_h5_selector: HtmlFiveSelector | None = None
 
     def with_backend(self, backend: str) -> "HtmlFiveResponse":
-        self._html5_backend = backend
+        self._scrapy_h5_backend = backend
         return self
 
     @property
@@ -29,7 +29,7 @@ class HtmlFiveResponse(HtmlResponse):
         The selector is lazily created and cached.
         """
         if self._cached_h5_selector is None:
-            self._cached_h5_selector = HtmlFiveSelector(self._html5_backend, text=self.text)
+            self._cached_h5_selector = HtmlFiveSelector(self._scrapy_h5_backend, text=self.text)
         return self._cached_h5_selector
 
     def xpath(

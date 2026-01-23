@@ -37,11 +37,11 @@ Add to your `settings.py`:
 
 ```python
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy_h5.HtmlFiveResponseMiddleware': 950,
+    'scrapy_h5.HtmlFiveResponseMiddleware': 650,
 }
 
 # Optional: disable globally (backend by default)
-# HTML5_BACKEND = None
+# SCRAPY_H5_BACKEND = None
 ```
 
 ### 2. Use in your spider
@@ -87,16 +87,16 @@ def start_requests(self):
     yield scrapy.Request(
         url2,
         callback=self.parse_legacy,
-        meta={'use_html5': False}
+        meta={'scrapy_h5_backend': False}
     )
 
 
 def parse_with_html5(self, response):
-    # Force html5 even if HTML5_BACKEND=False
+    # Force html5 even if SCRAPY_H5_BACKEND=False
     yield scrapy.Request(
         url,
         callback=self.parse,
-        meta={'use_html5': 'html5ever'}
+        meta={'scrapy_h5_backend': 'html5ever'}
     )
 ```
 
@@ -118,31 +118,15 @@ def parse_with_html5(self, response):
 
 ### Settings
 
-| Setting         | Default  | Description                                                              |
-|-----------------|----------|--------------------------------------------------------------------------|
-| `HTML5_BACKEND` | `lexbor` | Global html5 backend. `lexbor` and `html5ever` enables, `False` disables |
+| Setting             | Default  | Description                                                              |
+|---------------------|----------|--------------------------------------------------------------------------|
+| `SCRAPY_H5_BACKEND` | `lexbor` | Global html5 backend. `lexbor` and `html5ever` enables, `False` disables |
 
 ### Request meta
 
-| Key         | Default | Description                                                                                          |
-|-------------|---------|------------------------------------------------------------------------------------------------------|
-| `use_html5` | None    | Per-request override. `lexbor` and `html5ever` enables, `False` disables, `None` uses global setting |
-
-## Middleware priority
-
-The default priority (950) is chosen to run:
-
-- After `HttpCompressionMiddleware` (590) - responses are decompressed
-- After `HttpCacheMiddleware` (900) - cached responses are handled
-- Before most other processing
-
-Adjust the priority if needed:
-
-```python
-DOWNLOADER_MIDDLEWARES = {
-    'scrapy_h5.HtmlFiveResponseMiddleware': 400,  # Earlier in the chain
-}
-```
+| Key                 | Default | Description                                                                                          |
+|---------------------|---------|------------------------------------------------------------------------------------------------------|
+| `scrapy_h5_backend` | None    | Per-request override. `lexbor` and `html5ever` enables, `False` disables, `None` uses global setting |
 
 ## License
 
