@@ -12,7 +12,6 @@ Example:
     >>> links = extractor.extract_links(response)
 """
 
-import logging
 import operator
 from collections.abc import Callable, Iterable
 from functools import partial
@@ -27,8 +26,6 @@ from scrapy.linkextractors.lxmlhtml import LxmlLinkExtractor, LxmlParserLinkExtr
 from scrapy.utils.misc import rel_has_nofollow
 from w3lib.html import strip_html5_whitespace
 from w3lib.url import safe_url_string
-
-logger = logging.getLogger(__name__)
 
 
 class LinkExtractor(LxmlLinkExtractor):
@@ -56,8 +53,8 @@ class LinkExtractor(LxmlLinkExtractor):
 
     Example:
         >>> extractor = LinkExtractor(
-        ...     allow=r"/products/",
-        ...     deny=r"/admin/",
+        ...     allow="/products/",
+        ...     deny="/admin/",
         ...     tags=["a"],
         ...     attrs=["href"],
         ... )

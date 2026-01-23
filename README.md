@@ -124,9 +124,9 @@ def parse_with_html5(self, response):
 
 ### Request meta
 
-| Key         | Type   | Description                                                              |
-|-------------|--------|--------------------------------------------------------------------------|
-| `use_html5` | `bool` | Per-request override. `lexbor` and `html5ever` enables, `False` disables |
+| Key         | Default | Description                                                                                          |
+|-------------|---------|------------------------------------------------------------------------------------------------------|
+| `use_html5` | None    | Per-request override. `lexbor` and `html5ever` enables, `False` disables, `None` uses global setting |
 
 ## Middleware priority
 

@@ -1,8 +1,6 @@
 """HtmlFiveSelector and HtmlFiveSelectorList classes for HTML parsing."""
 
-import logging
 import re
-from collections.abc import Mapping
 from re import Pattern
 from typing import Any, TypeVar, overload
 
@@ -13,8 +11,6 @@ from scrapy.utils.trackref import object_ref
 
 _SelectorType = TypeVar("_SelectorType", bound="HtmlFiveSelector")
 _SelectorListType = TypeVar("_SelectorListType", bound="HtmlFiveSelectorList")
-
-logger = logging.getLogger(__name__)
 
 
 class HtmlFiveSelectorList(list[_SelectorType], object_ref):
@@ -111,7 +107,7 @@ class HtmlFiveSelectorList(list[_SelectorType], object_ref):
     extract_first = get
 
     @property
-    def attrib(self) -> Mapping[str, str]:
+    def attrib(self) -> dict[str, str | None]:
         """Return attributes of first element, or empty dict if empty."""
         for x in self:
             return x.attrib

@@ -1,14 +1,12 @@
 """Scrapy Downloader Middleware for html5-based HTML parsing."""
 
-import logging
-
 from scrapy import Request, Spider, signals
 from scrapy.crawler import Crawler
 from scrapy.http import HtmlResponse, Response
 
 from scrapy_h5.response import HtmlFiveResponse
 
-logger = logging.getLogger(__name__)
+_HTML_CONTENT_TYPES = {"text/html", "application/xhtml+xml"}
 
 
 class HtmlFiveResponseMiddleware:
@@ -59,18 +57,26 @@ class HtmlFiveResponseMiddleware:
     ) -> Response:
         """Process response and optionally replace with HtmlFiveResponse.
 
-        Only HtmlResponse instances are replaced. Other response types
-        (XmlResponse, JsonResponse, TextResponse, etc.) pass through unchanged.
+        Handles two cases:
+        1. Response is already HtmlResponse - replace with HtmlFiveResponse
+        2. Response is plain Response but has HTML content-type - convert to HtmlResponse then HtmlFiveResponse
         """
-        # Check if this is an HTML response
-        if not isinstance(response, HtmlResponse):
-            return response
-
         # Check per-request override
         use_html5 = request.meta.get("use_html5", self.backend)
-        if use_html5 is None:
+        if not use_html5:
             # Disabled globally or explicitly (for this request)
             return response
 
-        # Replace with HtmlFiveResponse
-        return response.replace(cls=HtmlFiveResponse).with_backend(use_html5)
+        # If already HtmlResponse, convert to HtmlFiveResponse
+        if isinstance(response, HtmlResponse):
+            return response.replace(cls=HtmlFiveResponse).with_backend(use_html5)
+
+        # Check if plain Response should be HTML based on content-type
+        content_type_header = response.headers.get("Content-Type", b"")
+        if content_type_header:
+            content_type = content_type_header.decode("utf-8", errors="ignore").lower()
+            if any(ct in content_type for ct in _HTML_CONTENT_TYPES):
+                return response.replace(cls=HtmlFiveResponse).with_backend(use_html5)
+
+        # Not an HTML response, pass through unchanged
+        return response
