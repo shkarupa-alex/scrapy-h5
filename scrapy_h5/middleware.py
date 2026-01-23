@@ -7,8 +7,6 @@ from scrapy.responsetypes import responsetypes
 
 from scrapy_h5.response import HtmlFiveResponse
 
-_HTML_CONTENT_TYPES = {"text/html", "application/xhtml+xml"}
-
 
 class HtmlFiveResponseMiddleware:
     """Downloader Middleware that replaces HtmlResponse with HtmlFiveResponse.
