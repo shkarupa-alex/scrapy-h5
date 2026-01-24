@@ -37,7 +37,9 @@ Add to your `settings.py`:
 
 ```python
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy_h5.HtmlFiveResponseMiddleware': 650,
+    # Must be above HttpCompressionMiddleware, closer to the end of response processing 
+    # (farther to the beginning of request processing)
+    'scrapy_h5.HtmlFiveResponseMiddleware': 45,
 }
 
 # Optional: disable globally (backend by default)
@@ -67,7 +69,7 @@ class MySpider(scrapy.Spider):
                 'name': item.css('h2::text').get(),
                 'price': item.css('.price::text').get(),
                 'url': item.css('a::attr(href)').get(),
-             }
+            }
  ```
 
 ### 3. Using with CrawlSpider
@@ -75,6 +77,7 @@ class MySpider(scrapy.Spider):
 ```python
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy_h5 import LinkExtractor
+
 
 class MyCrawlSpider(CrawlSpider):
     name = 'mycrawler'
@@ -132,7 +135,8 @@ def parse_with_html5(self, response):
 - **`HtmlFiveResponseMiddleware`**: Scrapy Downloader Middleware that replaces `HtmlResponse` with `HtmlFiveResponse`
 - **`LinkExtractor`**: Link extractor using HTML5 parsers (lexbor or html5ever)
 
-**Important:** The `LinkExtractor` only works with `HtmlFiveResponse`. Enable the middleware to automatically convert all HTML responses to `HtmlFiveResponse`.
+**Important:** The `LinkExtractor` only works with `HtmlFiveResponse`. Enable the middleware to automatically convert
+all HTML responses to `HtmlFiveResponse`.
 
 ### Exceptions
 
@@ -143,14 +147,14 @@ def parse_with_html5(self, response):
 
 ### Settings
 
-| Setting            | Default  | Description                                                              |
-|--------------------|----------|--------------------------------------------------------------------------|
+| Setting             | Default  | Description                                                              |
+|---------------------|----------|--------------------------------------------------------------------------|
 | `SCRAPY_H5_BACKEND` | `lexbor` | Global html5 backend. `lexbor` and `html5ever` enables, `False` disables |
 
 ### Request meta
 
-| Key                | Type   | Description                                                              |
-|--------------------|--------|--------------------------------------------------------------------------|
+| Key                 | Type   | Description                                                              |
+|---------------------|--------|--------------------------------------------------------------------------|
 | `scrapy_h5_backend` | `bool` | Per-request override. `lexbor` and `html5ever` enables, `False` disables |
 
 ## License

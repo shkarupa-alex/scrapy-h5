@@ -1,12 +1,13 @@
 """Integration test with real Scrapy spider."""
 
 import gzip
+import logging
 from typing import Any
 
 import pytest
 from scrapy import Request, Spider
 from scrapy.downloadermiddlewares.httpcompression import HttpCompressionMiddleware
-from scrapy.http import Response
+from scrapy.http import Response, XmlResponse
 from scrapy.spiders import CrawlSpider, Rule
 
 from scrapy_h5 import HtmlFiveResponse, HtmlFiveResponseMiddleware, LinkExtractor
@@ -126,3 +127,56 @@ def test_crawl_spider_with_link_extractor(backend: str) -> None:
     assert len(spider.collected_items) == 1
     assert spider.collected_items[0]["title"] == "Main Page"
     assert spider.collected_items[0]["url"] == "http://example.com"
+
+
+@pytest.mark.parametrize("backend", ["lexbor", "html5ever"])
+@pytest.mark.parametrize("content_type", ["application/xml", "text/xml"])
+def test_crawl_spider_with_xml_response(content_type: str, backend: str, caplog: pytest.LogCaptureFixture) -> None:
+    """Test CrawlSpider with LinkExtractor handles XmlResponse gracefully.
+
+    When a CrawlSpider using scrapy-h5's LinkExtractor encounters an XML response:
+    - The middleware does not convert XmlResponse to HtmlFiveResponse
+    - LinkExtractor logs a warning and returns no links
+    - The spider continues without errors
+    """
+    spider = SimpleCrawlSpider()
+    middleware = HtmlFiveResponseMiddleware(backend=backend)
+
+    xml_body = b"""<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <item>
+        <link href="/page1">Link 1</link>
+    </item>
+    <item>
+        <link href="/page2">Link 2</link>
+    </item>
+</root>"""
+
+    # Scrapy creates XmlResponse based on content-type
+    xml_response = XmlResponse(
+        url="http://example.com/data.xml",
+        body=xml_body,
+        headers={b"Content-Type": [content_type.encode()]},
+    )
+
+    # Process through middleware
+    request = Request(xml_response.url, callback=spider.parse_item)
+
+    with caplog.at_level(logging.WARNING):
+        result = middleware.process_response(request, xml_response)
+
+    # XmlResponse should pass through unchanged, not converted to HtmlFiveResponse
+    assert isinstance(result, XmlResponse)
+    assert not isinstance(result, HtmlFiveResponse)
+
+    # LinkExtractor should log warning and return no links for XmlResponse
+    link_extractor = LinkExtractor()
+    with caplog.at_level(logging.WARNING):
+        links = link_extractor.extract_links(result)
+
+    # No links should be extracted from XmlResponse
+    assert len(links) == 0
+
+    # Warning should be logged about unsupported response type
+    assert any("Unsupported response type" in record.message for record in caplog.records)
+    assert any("XmlResponse" in record.message for record in caplog.records)
